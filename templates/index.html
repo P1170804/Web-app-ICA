@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>URL Scanner</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- CSS to replicate wireframe, width for scanner box scales for mobile devices -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4faf8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 80px;
+    }
+    
+    .scanner-box {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .scanner-box input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .scanner-box button {
+      padding: 10px 20px;
+      background: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 10px;
+
+    }
+    .scanner-box button:hover {
+      background: #005fa3;
+    }
+    .results {
+      margin-top: 20px;
+      display: none;
+    }
+    .url {
+      font-size: 14px;
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 6px;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+    .status {
+      font-weight: bold;
+      color: green;
+      margin-bottom: 10px;
+    }
+    .status.bad {
+      color: red;
+    }
+    .details {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .details > div {
+      flex: 1;
+      background: #f1f1f1;
+      padding: 12px;
+      border-radius: 6px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      text-align: left;
+      font-size: 14px;
+      color: #555;
+    }
+    #rescanBtn {
+      display: none;
+      margin-top: 20px;
+    }
+    #qr {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scanner-box">
+    <h2>Scan a URL</h2>
+    <input type="text" id="urlInput" placeholder="https://example.com" />
+    <button id="scanBtn" onclick="scan()">Scan</button>
+
+    <div class="results" id="resultsBox">
+      <div class="url" id="resultUrl"></div>
+      <div class="status" id="resultStatus">Checking...</div>
+      <div class="details">
+        <div>
+          <strong>Last Scanned</strong><br>
+          <span id="resultDate"></span>
+        </div>
+        <div>
+          <strong>Risk Level</strong><br>
+          <span id="resultRisk"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="qr"></div>
+
+    <button id="rescanBtn" onclick="resetScan()">Scan Another URL</button>
+  </div>
+
+  <script>
+    // Function to click button for scan URL
+    // If statement when input empty, dont execute and alert user 
+    // (update) const used and splitted into var, resultStatus replaces status, resultURL replaces scannedLink
+    function scan() {
+      const urlInput = document.getElementById("urlInput");
+      let url = urlInput.value.trim();
+      const resultsBox = document.getElementById("resultsBox");
+      const resultUrl = document.getElementById("resultUrl");
+      const resultStatus = document.getElementById("resultStatus");
+      const resultDate = document.getElementById("resultDate");
+      const resultRisk = document.getElementById("resultRisk");
+      const rescanBtn = document.getElementById("rescanBtn");
+      const scanBtn = document.getElementById("scanBtn");
+      const qrBox = document.getElementById("qr");
+
+      
+
+      // Add http:// if missing
+      if (!/^https?:\/\//i.test(url)) {
+        url = "http://" + url;
+      }
+
+      // Basic domain validation (after adding http)
+      const urlPattern = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/.*)?$/i;
+      if (!urlPattern.test(url)) {
+        alert("Please enter a valid URL.");
+        return;
+      }
+
+      // Disables scan button, show loading text, hide previous results, rescan button
+      scanBtn.disabled = true;
+      scanBtn.textContent = "Scanning…";
+      resultsBox.style.display = "none";
+      rescanBtn.style.display = "none";
+
+      // Clear old QR code before new scan
+      qrBox.innerHTML = ""; 
+
+      fetch("http://127.0.0.1:5000/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      })
+
+      // Responds and updates page with results
+      // (Update)red colour added for malicious URL, show current date as scan date, display risk level + rescan btn
+      .then(r => r.json())
+      .then(data => {
+        resultUrl.textContent = url;
+        resultStatus.textContent = data.message;
+        resultStatus.classList.toggle("bad", data.is_malicious);
+        resultDate.textContent = new Date().toLocaleDateString();
+        resultRisk.textContent = data.is_malicious ? "10/10" : "0/10";
+
+        resultsBox.style.display = "block";
+        rescanBtn.style.display = "inline-block";
+        
+      
+    
+        // Show QR code only if URL safe
+        if (!data.is_malicious) {
+        
+        // Generate new QR code and clears QR if URL malicious 
+          new QRCode(qrBox, {
+            text: url,
+            width: 200,
+            height: 200
+          });
+        }
+      })
+      .catch(() => {
+        alert("Error checking URL. Please try again.");
+      })
+      .finally(() => {
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan";
+      });
+    }
+
+
+    // resets scanner, clear and reset
+    function resetScan() {
+      document.getElementById("urlInput").value = "";
+      document.getElementById("resultsBox").style.display = "none";
+      document.getElementById("rescanBtn").style.display = "none";
+      document.getElementById("qr").innerHTML = "";
+    }
+  </script>
+
+</body>
+</html>
