@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Setup google safe browsing api endpoint with API key
 # The API will be used to send URLs for threat analysis
-API_KEY = os.environ.get("API_KEY")
+API_KEY = os.environ.get("AIzaSyAZkeR_u23UXX1IjSVXf3y9a81xAfHzL1U")
 API_URL = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={API_KEY}"
 
 
