@@ -160,7 +160,7 @@
       // Clear old QR code before new scan
       qrBox.innerHTML = ""; 
 
-      fetch("http://127.0.0.1:5000/scan", {
+      fetch("https://safeqr-app.onrender.com/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
