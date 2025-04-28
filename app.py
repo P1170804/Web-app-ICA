@@ -2,12 +2,12 @@
 from flask import Flask, request, jsonify, render_template
 import requests
 import time
-
+import os
 app = Flask(__name__)
 
 # Setup google safe browsing api endpoint with API key
 # The API will be used to send URLs for threat analysis
-API_KEY = "AIzaSyAZkeR_u23UXX1IjSVXf3y9a81xAfHzL1U"
+API_KEY = os.environ.get("API_KEY")
 API_URL = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={API_KEY}"
 
 
