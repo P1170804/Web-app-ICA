@@ -170,6 +170,11 @@
       // (Update)red colour added for malicious URL, show current date as scan date, display risk level + rescan btn
       .then(r => r.json())
       .then(data => {
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
         resultUrl.textContent = url;
         resultStatus.textContent = data.message;
         resultStatus.classList.toggle("bad", data.is_malicious);

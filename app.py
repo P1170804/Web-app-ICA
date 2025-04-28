@@ -37,10 +37,7 @@ def scan():
     try:
         socket.gethostbyname(domain)
     except socket.error:
-        return jsonify({
-            "is_malicious": True,
-            "message": "❌ This domain does not exist or is unreachable! ❌"
-        }), 200
+        return jsonify({ "error": "This domain does not exist." }), 200
 
     # did the user send something?
     if not url:
