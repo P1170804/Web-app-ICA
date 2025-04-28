@@ -1,13 +1,15 @@
 #Import libararies for web app and api request
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 import requests
 import time
 import os
-app = Flask(__name__)
 
+app = Flask(__name__)
+CORS(app)
 # Setup google safe browsing api endpoint with API key
 # The API will be used to send URLs for threat analysis
-API_KEY = os.environ.get("AIzaSyAZkeR_u23UXX1IjSVXf3y9a81xAfHzL1U")
+API_KEY = os.environ.get("API_KEY")
 API_URL = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={API_KEY}"
 
 
