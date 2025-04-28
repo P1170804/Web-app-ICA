@@ -1,15 +1,15 @@
 #Import libararies for web app and api request
 from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
 import requests
 import time
-import os
+import socket 
+from urllib.parse import urlparse
 
 app = Flask(__name__)
-CORS(app)
+
 # Setup google safe browsing api endpoint with API key
 # The API will be used to send URLs for threat analysis
-API_KEY = os.environ.get("API_KEY")
+API_KEY = "AIzaSyAZkeR_u23UXX1IjSVXf3y9a81xAfHzL1U"
 API_URL = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={API_KEY}"
 
 
@@ -25,6 +25,22 @@ def scan():
     time.sleep(1.5) #just to show scan msg
     data = request.json
     url = data.get("url", "")
+
+# Parse and extract domain
+    parsed_url = urlparse(url)
+    domain = parsed_url.netloc or parsed_url.path  # handle if scheme missing
+
+    if not domain:
+        return jsonify({"error": "Invalid URL format."}), 400
+
+    # DNS check - Does domain exist?
+    try:
+        socket.gethostbyname(domain)
+    except socket.error:
+        return jsonify({
+            "is_malicious": True,
+            "message": "❌ This domain does not exist or is unreachable! ❌"
+        }), 200
 
     # did the user send something?
     if not url:
