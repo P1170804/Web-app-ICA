@@ -172,9 +172,11 @@
       .then(data => {
         resultUrl.textContent = url;
         resultStatus.textContent = data.message;
-        resultStatus.classList.toggle("bad", data.is_malicious);
+        resultStatus.className = "status"; // <--- Add this line to reset first
+        resultStatus.classList.toggle("bad", data.is_malicious); // Toggle red if malicious
         resultDate.textContent = new Date().toLocaleDateString();
         resultRisk.textContent = data.is_malicious ? "10/10" : "0/10";
+
 
         resultsBox.style.display = "block";
         rescanBtn.style.display = "inline-block";
